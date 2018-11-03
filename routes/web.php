@@ -11,16 +11,12 @@
 |
 */
 
-Route::get('/login', function () {
-    return view('login');
+Route::get('/' , function(){
+    return view('pages.index');
 });
 
-//GITHUB AUTH
-Route::get('login/github', 'Auth\LoginController@redirectToProviderGithub');
-Route::get('login/github/callback', 'Auth\LoginController@handleProviderCallbackGithub');
-//FACEBOOK AUTH
-Route::get('login/facebook', 'Auth\LoginController@redirectToProviderFacebook');
-Route::get('login/facebook/callback', 'Auth\LoginController@handleProviderCallbackFacebook');
-//GOOGLE AUTH
-Route::get('login/google', 'Auth\LoginController@redirectToProviderGoogle');
-Route::get('login/google/callback', 'Auth\LoginController@handleProviderCallbackGoogle');
+Route::get('/login',                            'Auth\LoginController@login');
+Route::get('/logout',                           'Auth\LoginController@logout');
+
+Route::get('/login/{provider}',                 'Auth\LoginController@redirectToProvider');
+Route::get('/login/{provider}/callback',        'Auth\LoginController@handleProviderCallback'); 

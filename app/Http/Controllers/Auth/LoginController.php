@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Socialite;
+use App\User;
+use Auth;
 
 class LoginController extends Controller
 {
@@ -26,7 +28,7 @@ class LoginController extends Controller
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/';
 
     /**
      * Create a new controller instance.
@@ -43,9 +45,9 @@ class LoginController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function redirectToProviderGithub()
+    public function redirectToProvider($provider)
     {
-        return Socialite::driver('github')->redirect();
+        return Socialite::driver($provider)->redirect();
     }
 
     /**
@@ -53,54 +55,45 @@ class LoginController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function handleProviderCallbackGithub()
+    public function handleProviderCallback($provider)
     {
-        $user = Socialite::driver('github')->user();
-        dd($user);
+        $user = Socialite::driver($provider)->user();
+        //dd($user);
+        $authenticateUser = $this->findOrCreateUSer($user, $provider);
+
+        $result = Auth::login($authenticateUser, true);
+
+        return redirect($this->redirectTo);
         // $user->token;
+    } 
+
+     /**
+     * If a user has registered before using social auth, return the user
+     * else, create a new user object. 
+     * @param  $user Socialite user object
+     * @param $provider Social auth provider
+     * @return  User
+     */
+    public function findOrCreateUser($user, $provider)
+    { 
+        $authUser = User::where('provider_id', $user->id)->first();
+        if ($authUser) {
+            return $authUser;
+        }
+        return User::create([
+             'name'     => $user->name,
+             'email'    => $user->email, 
+             'provider' => $provider,
+             'provider_id' => $user->id
+        ]);
     }
 
-    /**
-     * Redirect the user to the GitHub authentication page.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function redirectToProviderFacebook()
-    {
-        return Socialite::driver('facebook')->redirect();
+    public function login(){
+        return view('login');
     }
 
-    /**
-     * Obtain the user information from GitHub.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function handleProviderCallbackFacebook()
-    {
-        $user = Socialite::driver('facebook')->user();
-        dd($user);
-        // $user->token;
-    }
-
-    /**
-     * Redirect the user to the GitHub authentication page.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function redirectToProviderGoogle()
-    {
-        return Socialite::driver('google')->redirect();
-    }
-
-    /**
-     * Obtain the user information from GitHub.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function handleProviderCallbackGoogle()
-    {
-        $user = Socialite::driver('google')->user();
-        dd($user);
-        // $user->token;
+    public function logout(){ 
+        Auth::logout();
+        return redirect('/'); 
     }
 }
